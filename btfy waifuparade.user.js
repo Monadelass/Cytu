@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         waifupara beautify
 // @namespace    vvv.sylph
-// @version      0.1
+// @version      1.0
 // @description  none
 // @author       nobody
 // @match        https://videos.waifupara.de/*
