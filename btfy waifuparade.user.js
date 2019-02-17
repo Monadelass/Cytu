@@ -4,6 +4,7 @@
 // @version      1.0.2
 // @description  none
 // @author       nobody
+// @updateURL    https://github.com/Monadelass/WHQ/raw/master/btfy%20waifuparade.user.js
 // @match        https://videos.waifupara.de/*
 // @match        https://emotes.waifupara.de/*
 // @exclude      /^https:\/\/videos.waifupara.de\/[^.]+\.[^\.]+$/
