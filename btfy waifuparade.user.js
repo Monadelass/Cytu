@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name         waifupara beautify
 // @namespace    vvv.sylph
-// @version      1.0
+// @version      1.0.1
 // @description  none
 // @author       nobody
 // @match        https://videos.waifupara.de/*
 // @match        https://emotes.waifupara.de/*
-// @exclude      /^https:\/\/videos.waifupara.de\/.*\/[^\.]+\.[^\.]+$/
-// @exclude      /^https:\/\/emotes.waifupara.de\/.*\/[^\.]+\.[^\.]+$/
+// @exclude      /^https:\/\/videos.waifupara.de\/[^.]+\.[^\.]+$/
+// @exclude      /^https:\/\/emotes.waifupara.de\/[^.]+\.[^\.]+$/
 // @grant        none
 // @require      http://code.jquery.com/jquery-3.3.1.min.js
 // @run-at       document-start
 // ==/UserScript==
-
+(function(){
 //TODO Logo
 'use strict';
 (document.head || document.documentElement).insertAdjacentHTML("beforeend","<style id='hidepre'>pre {display:none;}</style>");
@@ -423,9 +423,12 @@ return `
         var _0x59d9=["\x64\x69\x76","\x63\x72\x65\x61\x74\x65\x45\x6C\x65\x6D\x65\x6E\x74","\x69\x6E\x6E\x65\x72\x48\x54\x4D\x4C","\x3C\x69\x6D\x67\x20\x73\x72\x63\x3D\x22\x68\x74\x74\x70\x73\x3A\x2F\x2F\x65\x6D\x6F\x74\x65\x73\x2E\x77\x61\x69\x66\x75\x70\x61\x72\x61\x2E\x64\x65\x2F\x65\x6D\x6F\x74\x65\x73\x2F\x5A\x41\x57\x41\x52\x55\x44\x4F\x2E\x67\x69\x66\x22\x3E\x3C\x62\x72\x3E\x48\x69\x65\x72\x20\x6B\xF6\x6E\x6E\x74\x65\x20\x49\x68\x72\x65\x20\x4A\x6F\x4A\x6F\x20\x52\x65\x66\x65\x72\x65\x6E\x7A\x20\x73\x74\x65\x68\x65\x6E","\x70\x72\x65\x70\x65\x6E\x64","\x62\x6F\x64\x79"];let dio=document[_0x59d9[1]](_0x59d9[0]);dio[_0x59d9[2]]= _0x59d9[3];document[_0x59d9[5]][_0x59d9[4]](dio)
     }
 
-//})();
+
 }
 if (document.readyState === "complete" && !window.btfy) {
     window.onload();
     console.log("late fire btfy");
 }
+
+
+})();
