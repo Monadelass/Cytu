@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         waifupara beautify
 // @namespace    vvv.sylph
-// @version      1.0.2
+// @version      1.0.3
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/btfy%20waifuparade.user.js
 // @match        https://videos.waifupara.de/*
 // @match        https://emotes.waifupara.de/*
-// @exclude      /^https:\/\/videos.waifupara.de\/[^.]+\.[^\.]+$/
-// @exclude      /^https:\/\/emotes.waifupara.de\/[^.]+\.[^\.]+$/
+// @exclude      /^https:\/\/videos\.waifupara\.de\/.*\.[^\.\/]+$/
+// @exclude      /^https:\/\/emotes\.waifupara\.de\/.*\.[^\.\/]+$/
 // @grant        none
 // @require      http://code.jquery.com/jquery-3.3.1.min.js
 // @run-at       document-start
