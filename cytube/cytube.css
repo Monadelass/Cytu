@@ -1,0 +1,27 @@
+/*slim and dark scrollbars*/
+::-webkit-scrollbar {
+	width: 10px;
+}
+::-webkit-scrollbar-thumb {
+	background: #3e3d3d;
+}
+::-webkit-scrollbar-track {
+	background: #00000033; 
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #6c6c6c;
+}
+
+:root{	
+	scrollbar-color: #3e3d3d #0003;
+	scrollbar-width: thin;
+}
+#userlist{
+	overflow-y:auto;
+	scrollbar-color: #3e3d3d #0003;
+	scrollbar-width: thin;
+}
+#messagebuffer{
+	scrollbar-color: #3e3d3d #0003;
+	scrollbar-width: thin;
+}
