@@ -32,7 +32,7 @@ function btfyCinemamode(){
 	//add emote button to cinemamode
 	$("#chatline").after('<div id="chatline-wrapper"></div>');
 	$("#chatline-wrapper").append($("#chatline"));
-	$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow" onclick="" ><div style="margin-top:-4px;">☺</div></button>'));
+	$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
 	let emotebtnfun = jQuery._data($("#emotelistbtn")[0], "events" ).click[0].handler;
 	$("#cinema-emotes").click(emotebtnfun);
 	
@@ -76,6 +76,11 @@ function btfyCinemamode(){
 			border: none;
 			display: flex !important;
 			justify-content: center;
+		}
+		#cinema-emote-smiley{
+			margin-top:auto;
+			margin-bottom: 23px;
+			-webkit-margin-after:7px;
 		}
 		.cinemachat #emotelist{
 			z-index: 3000;
