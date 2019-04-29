@@ -17,7 +17,7 @@ function btfyCinemamode(){
 	btfytag.innerHTML = getBtfyStyle();
 	document.body.prepend(btfytag);
 	
-	//add plus and minus resize buttons to cinemamode
+	//add minus and plus resize buttons to cinemamode
 	$("#chatheader").append('<span id="chat-minus" class="label label-default pointer cinemashow chatheaderbtn" onclick="changeCinemaChatSize(-50)">-</span>');
 	$("#chatheader").append('<span id="chat-plus" class="label label-default pointer cinemashow chatheaderbtn" onclick="changeCinemaChatSize(50)">+</span>');
 	
@@ -111,26 +111,6 @@ class WHQbtfyELS{
 		//noticebox
 		$("#chatwrap").append(`<div id="elsnoticebox"></div>`)
 		
-		//add options to configbox
-		$("#whq-config-box1").append(`<div id="config-els-cat">
-		<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes"><label for="els-option-randomize">randomize ELS emotes</label></div>
-		<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption"checked><label for="els-option-emotecaption">show ELS caption</label></div>
-		</div>`);
-		$("#els-option-randomize").on("click", function(e){
-			if (e.target.checked){
-				WHQbtfyELS.getInstance().isRandomizeemotesOn = true;
-			} else {
-				WHQbtfyELS.getInstance().isRandomizeemotesOn = false;
-			}
-		});
-		$("#els-option-emotecaption").on("click", function(e){
-			if (e.target.checked){
-				WHQbtfyELS.getInstance().isShowEmoteCaptionOn = true;
-			} else {
-				WHQbtfyELS.getInstance().isShowEmoteCaptionOn = false;
-			}
-		});
-		
 		//create CSS rules for EmoteslistSlim
 		if (!document.getElementById("emoteslist-slim-style1")){
 			let elslimstyle = document.createElement("style");
@@ -145,14 +125,33 @@ class WHQbtfyELS{
 		this.elsparentdiv = elsparentdiv;
 		this.isOn = false;
 		this.isRandomizeemotesOn = false;
+		this.isFullsearchOn = false;
 		this.isShowEmoteCaptionOn = true;
+		this.isAutohideOn = true;
+		this.isOverridetabOn = false;
+		this.allEmotes = [...EMOTELIST.emotes];		//clone EMOTElist because it can be filtered by the normal emotelist
 		this.currentEmotes = [];
 		
-		//add Events
+		//remember #chatline event for (reset) overriding that event
+		window.defaultChatlineKeydownEvent = jQuery._data($("#chatline")[0], "events" ).keydown[0].handler;
+		
+		//add options to configbox options
+		WHQbtfyELS.setupConfigboxOptions();
+		
+		//add Events *****************************************************************************
+		//key input
 		this.textbox.addEventListener("keyup", WHQbtfyELS.emotelistSlimLookupExpansionHotkeyEvent);
+		//click on emote
 		$(this.elsdiv).on("click", "> div", function(e){
 			let emote = e.currentTarget.getAttribute("emotestr");
 			WHQbtfyELS.addEmoteToTextbox(emote);
+		});
+		//fade out after loosing chatinput focus
+		$(this.textbox).focusout(function(){
+			if (WHQbtfyELS.getInstance().isOn && WHQbtfyELS.getInstance().isAutohideOn){
+				$(WHQbtfyELS.getInstance().elsdiv).fadeOut();
+				setTimeout(function(){WHQbtfyELS.getInstance().hide()}, 1000);
+			}
 		});
 		
 	}
@@ -201,17 +200,22 @@ class WHQbtfyELS{
 			}
 			if (els.currentEmotes.length < 1){
 				els.hide();
-				els.showNotice("0 matches");
+				els.showNotice("0 matches - current Emotelist empty");
 				return;
 			}
 		}
 		
 		// ctrl + b
-		if ((e.ctrlKey && e.keyCode == 66) || iscontinuetyping) {
+		let elsHotkeyPressed = (e.ctrlKey && e.keyCode == 66);
+		if (els.isOverridetabOn){
+			elsHotkeyPressed = Boolean(e.keyCode == 9);
+		}
+		
+		if (elsHotkeyPressed || iscontinuetyping) {
 			//console.log(`debug: keycode=${e.keyCode} ### iscontinuetyping=${iscontinuetyping} ### elsison=${els.isOn}`);
 			let emotelist;
-			if (e.ctrlKey && e.keyCode == 66){
-				emotelist = EMOTELIST.emotes;
+			if (elsHotkeyPressed){
+				emotelist = els.allEmotes;
 			} else {
 				emotelist = els.currentEmotes;
 			}
@@ -234,18 +238,24 @@ class WHQbtfyELS{
 			if (slashpos){
 				let emotestr = txt.substring(slashpos-1, cursorpos);
 				//console.log(`debug: emotestr=${emotestr}`);
-				let matchingemotes = emotelist.filter((e) => {return e.name.startsWith(emotestr);});
+				if (emotestr != '/'){
+					if (els.isFullsearchOn){
+						els.currentEmotes = emotelist.filter((e) => {return e.name.includes(emotestr.substr(1));});
+					} else {
+						els.currentEmotes = emotelist.filter((e) => {return e.name.startsWith(emotestr);});
+					}
+					if (!els.isRandomizeemotesOn){
+						els.currentEmotes = els.currentEmotes.sort();	//sort emotes to bring the most relevant ones to the front
+					}
+				}
 				if (els.isRandomizeemotesOn){ 
 					//shuffle emotes
-					els.currentEmotes = WHQbtfyELS.shuffle(matchingemotes);
-					WHQbtfyELS._popupEmoteslistslim();
-				} else { 
-					//sort emotes to bring the most relevant ones to the front
-					els.currentEmotes = matchingemotes.sort();
-					WHQbtfyELS._popupEmoteslistslim();
+					els.currentEmotes = WHQbtfyELS.shuffle(els.currentEmotes);
 				}
+				
+				WHQbtfyELS._popupEmoteslistslim();
 			} else {
-				els.isOn = false;
+				els.hide();
 			}
 
 		//number key 1-9
@@ -330,6 +340,68 @@ class WHQbtfyELS{
 		els.show()
 	}
 	
+	
+	static setupConfigboxOptions(){
+		$("#whq-config-box1").append(`<div id="config-els-cat">
+			<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes"><label for="els-option-randomize">randomize ELS emotes</label></div>
+			<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes"><label for="els-option-fullsearch">fullsearch ELS emotes</label></div>
+			<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption"checked><label for="els-option-emotecaption">show ELS caption</label></div>
+			<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"checked><label for="els-option-autohide">autohide ELS</label></div>
+			<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]"><label for="els-option-overridetab">override [Tab]</label></div>
+		</div>`);
+
+		$("#els-option-randomize").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().isRandomizeemotesOn = true;
+			} else {
+				WHQbtfyELS.getInstance().isRandomizeemotesOn = false;
+			}
+		});
+		$("#els-option-emotecaption").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().isShowEmoteCaptionOn = true;
+			} else {
+				WHQbtfyELS.getInstance().isShowEmoteCaptionOn = false;
+			}
+		});
+		$("#els-option-autohide").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().isAutohideOn = true;
+			} else {
+				WHQbtfyELS.getInstance().isAutohideOn = false;
+			}
+		});
+		$("#els-option-fullsearch").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().isFullsearchOn = true;
+			} else {
+				WHQbtfyELS.getInstance().isFullsearchOn = false;
+			}
+		});
+		$("#els-option-overridetab").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().isOverridetabOn = true;
+				
+				//override default event for #chatline (the chat input box)
+				$("#chatline").off("keydown");
+				$("#chatline").on("keydown", function(e){
+					if (e.keyCode == 9){
+						e.preventDefault()
+					} else {
+						window.defaultChatlineKeydownEvent(e);
+					}
+				});
+			} else {
+				WHQbtfyELS.getInstance().isOverridetabOn = false;
+				
+				//reset to old event
+				$("#chatline").off("keydown");
+				$("#chatline").on("keydown", window.defaultChatlineKeydownEvent);
+			}
+		});
+
+	}
+	
 	static getElslimstyle(){
 return `
 .emoteslist-slim {
@@ -370,7 +442,7 @@ return `
     position: absolute;
     align-self: flex-end;
     font-weight: bold;
-    font-size: 1.1em;
+    font-size: 0.7em;
     text-shadow: 2px 2px 2px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 	word-break: break-all;
 }
