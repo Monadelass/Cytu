@@ -2,13 +2,12 @@
 /*********************  WHQ Btfy  ****************************/
 /*************************************************************/
 function changeCinemaChatSize(offset){
-	let main = document.getElementById("main");
-	let mainprop = main.style.getPropertyValue("--cinema-chatvid-width");
-	if (!mainprop){
-		mainprop = "400px";
+	let cinemachatprop = document.body.style.getPropertyValue("--cinema-chatvid-width");
+	if (!cinemachatprop){
+		cinemachatprop = "400px";
 	}
-	let newmainprop = (parseInt(mainprop) + offset) + "px";
-	main.style.setProperty("--cinema-chatvid-width", newmainprop);
+	let newprop = (parseInt(cinemachatprop) + offset) + "px";
+	document.body.style.setProperty("--cinema-chatvid-width", newprop);
 }
 
 function btfyCinemamode(){
@@ -24,7 +23,21 @@ function btfyCinemamode(){
 	//add config menu cog
 	$("#chatheader").append(`<span id="whq-config" class="label label-default pointer chatheaderbtn"">&#9881;</span>`);
 	$("#chatwrap").append(`<div id="whq-config-box1" style="display:none;" class="whq-config-box"></div>`);
-	$("#whq-config").on("click", function(){$("#whq-config-box1").toggle()});
+	
+	$("#whq-config").on("click", function(e){
+		e.stopPropagation();
+		$("#whq-config-box1").toggle();
+		//autohide after clicking elsewhere
+		if ($("#whq-config-box1").is(":visible")){
+			document.addEventListener("click", function autoremovefun(e){
+				e.stopPropagation();
+				if (!$(e.target).is("#whq-config-box1 *")){
+					$("#whq-config-box1").hide();
+					document.removeEventListener('click', autoremovefun);
+				}
+			});
+		}
+	});
 	
 	//TODO don't do it like that
 	window.changeCinemaChatSize = changeCinemaChatSize;
@@ -40,6 +53,16 @@ function btfyCinemamode(){
 	$('#emotelist').on('shown.bs.modal', function () {
 		$('.emotelist-search')[0].focus();
 	});
+	
+	fixChatPositionDependingElements();
+	
+	function fixChatPositionDependingElements(){
+		if ($("#videowrap").nextAll().filter("#chatwrap").length !== 0){
+			$("body").addClass("chat-right");
+		} else {
+			$("body").addClass("chat-left");
+		}
+	}
 	
 	function getBtfyStyle(){
 	return `
@@ -89,8 +112,12 @@ function btfyCinemamode(){
 			vertical-align: top;
 			line-height: 1.6;
 		}
+		.cinemachat.chat-right #cinematoggle {
+			right: var(--cinema-chatvid-width, 402px) !important;
+		}
 		.whq-config-box{
 			position: absolute;
+			z-index: 950;
 			top: 20px;
 			max-width: 90%;
 			max-height: 80%;
@@ -135,12 +162,17 @@ class WHQbtfyELS{
 		//remember #chatline event for (reset) overriding that event
 		window.defaultChatlineKeydownEvent = jQuery._data($("#chatline")[0], "events" ).keydown[0].handler;
 		
+		//load options (configbox)
+		this.retrieveConfig();
+		
 		//add options to configbox options
-		WHQbtfyELS.setupConfigboxOptions();
+		this.setupConfigboxOptions();
 		
 		//add Events *****************************************************************************
 		//key input
 		this.textbox.addEventListener("keyup", WHQbtfyELS.emotelistSlimLookupExpansionHotkeyEvent);
+		this.textbox.addEventListener("keydown", WHQbtfyELS.overrideCtrlB);
+		
 		//click on emote
 		$(this.elsdiv).on("click", "> div", function(e){
 			let emote = e.currentTarget.getAttribute("emotestr");
@@ -179,6 +211,13 @@ class WHQbtfyELS{
 		setTimeout(function(){notice.remove()}, 3000);
 	}
 	
+	static overrideCtrlB(e){
+		if (e.ctrlKey && e.keyCode == 66){
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}
+	
 	static emotelistSlimLookupExpansionHotkeyEvent(e){
 		let els = WHQbtfyELS.getInstance();
 		
@@ -207,18 +246,14 @@ class WHQbtfyELS{
 		
 		// ctrl + b
 		let elsHotkeyPressed = (e.ctrlKey && e.keyCode == 66);
+		
 		if (els.isOverridetabOn){
 			elsHotkeyPressed = Boolean(e.keyCode == 9);
 		}
 		
 		if (elsHotkeyPressed || iscontinuetyping) {
 			//console.log(`debug: keycode=${e.keyCode} ### iscontinuetyping=${iscontinuetyping} ### elsison=${els.isOn}`);
-			let emotelist;
-			if (elsHotkeyPressed){
-				emotelist = els.allEmotes;
-			} else {
-				emotelist = els.currentEmotes;
-			}
+			
 			let textbox = e.target;
 			let txt = textbox.value.substring(0, textbox.selectionStart).toLowerCase();
 			let cursorpos = textbox.selectionStart;
@@ -237,6 +272,12 @@ class WHQbtfyELS{
 
 			if (slashpos){
 				let emotestr = txt.substring(slashpos-1, cursorpos);
+				let emotelist;
+				if (elsHotkeyPressed){
+					emotelist = els.allEmotes;
+				} else {
+					emotelist = els.currentEmotes;
+				}
 				//console.log(`debug: emotestr=${emotestr}`);
 				if (emotestr != '/'){
 					if (els.isFullsearchOn){
@@ -247,6 +288,8 @@ class WHQbtfyELS{
 					if (!els.isRandomizeemotesOn){
 						els.currentEmotes = els.currentEmotes.sort();	//sort emotes to bring the most relevant ones to the front
 					}
+				} else{
+					els.currentEmotes = emotelist;
 				}
 				if (els.isRandomizeemotesOn){ 
 					//shuffle emotes
@@ -340,57 +383,51 @@ class WHQbtfyELS{
 		els.show()
 	}
 	
+	setupConfigboxOptions(){
+		//pre checked checkboxes
+		const [a,b,c,d,e] = [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn
+			].map((x) => {if (x){return "checked";} else {return "";} });
 	
-	static setupConfigboxOptions(){
 		$("#whq-config-box1").append(`<div id="config-els-cat">
-			<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes"><label for="els-option-randomize">randomize ELS emotes</label></div>
-			<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes"><label for="els-option-fullsearch">fullsearch ELS emotes</label></div>
-			<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption"checked><label for="els-option-emotecaption">show ELS caption</label></div>
-			<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"checked><label for="els-option-autohide">autohide ELS</label></div>
-			<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]"><label for="els-option-overridetab">override [Tab]</label></div>
+			<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize ELS emotes</label></div>
+			<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch ELS emotes</label></div>
+			<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show ELS caption</label></div>
+			<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"${d}><label for="els-option-autohide">autohide ELS</label></div>
+			<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label></div>
+			<button id="whq-config-els-save" class="whq-config-savebtn">Save</button>
 		</div>`);
 
 		$("#els-option-randomize").on("click", function(e){
 			if (e.target.checked){
-				WHQbtfyELS.getInstance().isRandomizeemotesOn = true;
+				WHQbtfyELS.getInstance().setON_Randomizeemotes();
 			} else {
 				WHQbtfyELS.getInstance().isRandomizeemotesOn = false;
 			}
 		});
 		$("#els-option-emotecaption").on("click", function(e){
 			if (e.target.checked){
-				WHQbtfyELS.getInstance().isShowEmoteCaptionOn = true;
+				WHQbtfyELS.getInstance().setON_ShowEmoteCaption();
 			} else {
 				WHQbtfyELS.getInstance().isShowEmoteCaptionOn = false;
 			}
 		});
 		$("#els-option-autohide").on("click", function(e){
 			if (e.target.checked){
-				WHQbtfyELS.getInstance().isAutohideOn = true;
+				WHQbtfyELS.getInstance().setON_Autohide();
 			} else {
 				WHQbtfyELS.getInstance().isAutohideOn = false;
 			}
 		});
 		$("#els-option-fullsearch").on("click", function(e){
 			if (e.target.checked){
-				WHQbtfyELS.getInstance().isFullsearchOn = true;
+				WHQbtfyELS.getInstance().setON_Fullsearch();
 			} else {
 				WHQbtfyELS.getInstance().isFullsearchOn = false;
 			}
 		});
 		$("#els-option-overridetab").on("click", function(e){
 			if (e.target.checked){
-				WHQbtfyELS.getInstance().isOverridetabOn = true;
-				
-				//override default event for #chatline (the chat input box)
-				$("#chatline").off("keydown");
-				$("#chatline").on("keydown", function(e){
-					if (e.keyCode == 9){
-						e.preventDefault()
-					} else {
-						window.defaultChatlineKeydownEvent(e);
-					}
-				});
+				WHQbtfyELS.getInstance().setON_Overridetab();
 			} else {
 				WHQbtfyELS.getInstance().isOverridetabOn = false;
 				
@@ -399,7 +436,85 @@ class WHQbtfyELS{
 				$("#chatline").on("keydown", window.defaultChatlineKeydownEvent);
 			}
 		});
+		$("#whq-config-els-save").on("click", function(e){
+			WHQbtfyELS.getInstance().setConfig();
+		});
+		
 
+	}
+	
+	setON_Randomizeemotes(){
+		this.isRandomizeemotesOn = true;
+	}
+	setON_ShowEmoteCaption(){
+		this.isShowEmoteCaptionOn = true;
+	}
+	setON_Autohide(){
+		this.isAutohideOn = true;
+	}
+	setON_Fullsearch(){
+		this.isFullsearchOn = true;
+	}
+	setON_Overridetab(){
+		this.isOverridetabOn = true;
+		
+		//override default event for #chatline (the chat input box)
+		$("#chatline").off("keydown");
+		$("#chatline").on("keydown", function(e){
+			if (e.keyCode == 9){
+				e.preventDefault()
+			} else {
+				window.defaultChatlineKeydownEvent(e);
+			}
+		});
+	}
+	
+	setConfig(){
+		let optionarr = [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn];
+		let optionint = WHQbtfyELS.bitarrToInt(optionarr);
+		document.cookie = `whqconfigels=${optionint}`;
+	}
+	
+	retrieveConfig(){
+		let optionint = document.cookie.replace(/(?:(?:^|.*;\s*)whqconfigels\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+		if(!optionint){
+			return;
+		}
+		let optionarr = WHQbtfyELS.intToBitarr(optionint, 5);
+		[this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn] = optionarr;
+		
+		if (this.isRandomizeemotesOn){
+			this.setON_Randomizeemotes();
+		}
+		if (this.isFullsearchOn){
+			this.setON_Fullsearch();
+		}
+		if (this.isShowEmoteCaptionOn){
+			this.setON_ShowEmoteCaption();
+		}
+		if (this.isAutohideOn){
+			this.setON_Autohide();
+		}
+		if (this.isOverridetabOn){
+			this.setON_Overridetab();
+		}
+	}
+	
+	static bitarrToInt(arr){
+		let res = 0;
+		for (let i = 0; i < arr.length; i++){
+			res += arr[i] << i;
+		}
+		return res;
+	}
+	
+	//intToBitarr(num, n) -> 
+	static intToBitarr(inta, n){
+		let res = [];
+        for (let i = 0; i < n; i++){
+			res.push(1 & inta >> i);
+		}
+        return res;
 	}
 	
 	static getElslimstyle(){
@@ -470,6 +585,14 @@ return `
     position: absolute;
     left: 0;
     top: 0;
+}
+#config-els-cat{
+	display: flex;
+	flex-direction: column;
+}
+.whq-config-savebtn{
+	float: right;
+	color: black;
 }
 `;
 }
