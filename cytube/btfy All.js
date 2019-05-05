@@ -108,10 +108,6 @@ function btfyCinemamode(){
 		.cinemachat #emotelist{
 			z-index: 3000;
 		}
-		.chatheaderbtn{
-			vertical-align: top;
-			line-height: 1.6;
-		}
 		.cinemachat.chat-right #cinematoggle {
 			right: var(--cinema-chatvid-width, 402px) !important;
 		}
@@ -123,6 +119,42 @@ function btfyCinemamode(){
 			max-height: 80%;
 			background-color: #2b382d;
 		}
+		#chatheader{
+			display: flex !important;
+		}
+		.chat-right #chatheader{
+			flex-direction: row-reverse;
+		}
+		#chatheader span{
+			user-select: none;
+		}
+		#userlisttoggle{
+			order: 10;
+		}
+		#usercount{
+			order: 20;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			white-space: nowrap;
+		}
+		#chat-minus{
+			order: 30;
+		}
+		#chat-plus{
+			order: 40;
+		}
+		#whq-config{
+			order: 50;
+		}
+		.chat-left #modflair{
+			order: 100;
+			margin-left: auto !important;
+		}
+		.chat-right #modflair{
+			order: 100;
+			margin-right: auto !important;
+		}
+
 	`;
 	}
 }
