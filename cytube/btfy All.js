@@ -147,6 +147,7 @@ class WHQbtfyELS{
 			document.body.prepend(elslimstyle);
 		}
 		
+		//set object attributes
 		this.elsdiv = elslim;
 		this.textbox = document.getElementById("chatline");
 		this.elsparentdiv = elsparentdiv;
@@ -298,6 +299,10 @@ class WHQbtfyELS{
 				
 				WHQbtfyELS._popupEmoteslistslim();
 			} else {
+				//fallback for default Tab behaviour (user name completion)
+				if (els.isOverridetabOn){
+					window.defaultChatlineKeydownEvent(e);
+				}
 				els.hide();
 			}
 
