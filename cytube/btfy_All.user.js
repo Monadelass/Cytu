@@ -9,6 +9,10 @@ function changeCinemaChatSize(offset){
 	let newprop = (parseInt(cinemachatprop) + offset) + "px";
 	document.body.style.setProperty("--cinema-chatvid-width", newprop);
 }
+function toggleCinemaPlaylist(){
+	$("#queue").toggleClass("cinemashow");
+	$("#cinema-playlist").toggleClass("chatheaderbtn-active");
+}
 
 function btfyCinemamode(){
 	let btfytag = document.createElement("style");
@@ -17,8 +21,11 @@ function btfyCinemamode(){
 	document.body.prepend(btfytag);
 	
 	//add minus and plus resize buttons to cinemamode
-	$("#chatheader").append('<span id="chat-minus" class="label label-default pointer cinemashow chatheaderbtn" onclick="changeCinemaChatSize(-50)">-</span>');
-	$("#chatheader").append('<span id="chat-plus" class="label label-default pointer cinemashow chatheaderbtn" onclick="changeCinemaChatSize(50)">+</span>');
+	$("#chatheader").append('<span id="chat-minus" class="label label-default pointer chatheaderbtn cinemashow hide" onclick="changeCinemaChatSize(-50)">-</span>');
+	$("#chatheader").append('<span id="chat-plus" class="label label-default pointer chatheaderbtn cinemashow hide" onclick="changeCinemaChatSize(50)">+</span>');
+	
+	//add show playlist for cinemamode button
+	$("#chatheader").append('<span id="cinema-playlist" class="label label-default pointer chatheaderbtn cinemashow hide" onclick="toggleCinemaPlaylist()">P</span>');
 	
 	//add config menu cog
 	$("#chatheader").append(`<span id="whq-config" class="label label-default pointer chatheaderbtn"">&#9881;</span>`);
@@ -41,11 +48,12 @@ function btfyCinemamode(){
 	
 	//TODO don't do it like that
 	window.changeCinemaChatSize = changeCinemaChatSize;
+	window.toggleCinemaPlaylist = toggleCinemaPlaylist;
 	
 	//add emote button to cinemamode
 	$("#chatline").after('<div id="chatline-wrapper"></div>');
 	$("#chatline-wrapper").append($("#chatline"));
-	$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+	$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
 	let emotebtnfun = jQuery._data($("#emotelistbtn")[0], "events" ).click[0].handler;
 	$("#cinema-emotes").click(emotebtnfun);
 	
@@ -53,6 +61,7 @@ function btfyCinemamode(){
 	$('#emotelist').on('shown.bs.modal', function () {
 		$('.emotelist-search')[0].focus();
 	});
+	
 	
 	fixChatPositionDependingElements();
 	
@@ -72,9 +81,12 @@ function btfyCinemamode(){
 		.cinemachat .cinemashow{
 			display: initial !important;
 		}
-		.cinemashow{
-			display: none;
+		.hide{
+			display:none;
 		}
+		/*.cinemashow{
+			display: none;
+		}*/
 		body.cinemachat #chatwrap{
 			width: var(--cinema-chatvid-width,400px) !important;
 		}
@@ -143,8 +155,11 @@ function btfyCinemamode(){
 		#chat-plus{
 			order: 40;
 		}
+		#cinema-playlist{
+			order: 50
+		}
 		#whq-config{
-			order: 50;
+			order: 60;
 		}
 		.chat-left #modflair{
 			order: 100;
@@ -153,6 +168,32 @@ function btfyCinemamode(){
 		.chat-right #modflair{
 			order: 100;
 			margin-right: auto !important;
+		}
+		.cinemachat #queue {
+			z-index: 3500;
+			position: fixed;
+			top: 20px;
+			left: 0;
+			resize: both;
+			width: var(--cinema-chatvid-width, 400px) !important;
+			height: auto !important;
+			max-height: calc(100vh - 58px) !important;
+			background-color: #302244;
+			border: 5px solid transparent;
+			border-image: linear-gradient(to bottom right, #b827fc 0%, #2c90fc 25%, #b8fd33 50%, #fec837 75%, #fd1892 100%);
+			border-image-slice: 1;
+		}
+		.cinemachat.chat-right #queue{
+			right: 0;
+			left: auto !important;
+		}
+		.chatheaderbtn-active{
+			color: #d25a5a;
+			animation: colorpulse 4s cubic-bezier(0.61, 0.07, 0.81, 0.82) 0s infinite alternate;
+		}
+		@keyframes colorpulse {
+		  0%{color: #d25a5a;}
+		  100%{color: #000000;}
 		}
 
 	`;
@@ -607,7 +648,6 @@ return `
 	line-height:0.5em;
 	z-index: 910;
 }
-
 .elsemote-num {
     width: 20px;
     height: 20px;
