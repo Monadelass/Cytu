@@ -34,12 +34,14 @@ function btfyCinemamode(){
 	$("#whq-config").on("click", function(e){
 		e.stopPropagation();
 		$("#whq-config-box1").toggle();
+		$("#whq-config").toggleClass("chatheaderbtn-active");
 		//autohide after clicking elsewhere
 		if ($("#whq-config-box1").is(":visible")){
 			document.addEventListener("click", function autoremovefun(e){
 				e.stopPropagation();
 				if (!$(e.target).is("#whq-config-box1 *")){
 					$("#whq-config-box1").hide();
+					$("#whq-config").removeClass("chatheaderbtn-active");
 					document.removeEventListener('click', autoremovefun);
 				}
 			});
