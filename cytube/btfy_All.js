@@ -1,6 +1,12 @@
 /*************************************************************/
 /*********************  WHQ Btfy  ****************************/
 /*************************************************************/
+// depends on
+//		JQuery 1.11+
+//		Xaekai Cinemamode https://resources.pink.horse/newscripts/module_layout.min.js
+//		Cytube.utils.js
+//		|-	function waitUntilDefined(obj, key, fn)
+
 function changeCinemaChatSize(offset){
 	let cinemachatprop = document.body.style.getPropertyValue("--cinema-chatvid-width");
 	if (!cinemachatprop){
@@ -64,16 +70,22 @@ function btfyCinemamode(){
 		$('.emotelist-search')[0].focus();
 	});
 	
+	//cleanup after leaving cinemamode/cinemachat
+	waitUntilDefined(window, "cinematoggle", function(){
+		$("#cinematoggle").on("click", function(){
+			if (!document.body.classList.contains("cinemachat")){
+				$("#queue").removeAttr("style");
+			}
+		});
+	});
 	
-	fixChatPositionDependingElements();
-	
-	function fixChatPositionDependingElements(){
-		if ($("#videowrap").nextAll().filter("#chatwrap").length !== 0){
-			$("body").addClass("chat-right");
-		} else {
-			$("body").addClass("chat-left");
-		}
+	//fix Chat Position (Left/Right), make depending Elements properly align by adding 'conditional' CSS classes
+	if ($("#videowrap").nextAll().filter("#chatwrap").length !== 0){
+		$("body").addClass("chat-right");
+	} else {
+		$("body").addClass("chat-left");
 	}
+	
 	
 	function getBtfyStyle(){
 	return `
@@ -176,9 +188,9 @@ function btfyCinemamode(){
 			position: fixed;
 			top: 20px;
 			left: 0;
-			resize: both;
+			resize: vertical;
 			width: var(--cinema-chatvid-width, 400px) !important;
-			height: auto !important;
+			height: 50%;
 			max-height: calc(100vh - 58px) !important;
 			background-color: #302244;
 			border: 5px solid transparent;
