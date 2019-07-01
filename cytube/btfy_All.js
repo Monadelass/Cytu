@@ -74,7 +74,12 @@ function btfyCinemamode(){
 	waitUntilDefined(window, "cinematoggle", function(){
 		$("#cinematoggle").on("click", function(){
 			if (!document.body.classList.contains("cinemachat")){
+				//leaving cinemamode
 				$("#queue").removeAttr("style");
+				$("#queue").appendTo("#queuefail + .col-lg-12.col-md-12");
+			} else {
+				//enter cinemamode
+				$("#queue").appendTo("#chatwrap");
 			}
 		});
 	});
@@ -620,7 +625,7 @@ return `
 	width: 90%;
 	margin: 30px 10px;
 	/*background-color: #605763d6;*/
-	z-index: 900;
+	z-index: 4000;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     grid-gap: 0.3rem;
     /*overflow: auto;*/
