@@ -11,6 +11,28 @@ class Cinemamode {
 		let cinemaCSS = Cinemamode.getCinemamodeStyle();
 		this.style = $("<style>").attr("type", "text/css").attr("id", "cinemaStyle").html(cinemaCSS).appendTo("head");
 		
+		//hide scrollbar when hovering chat
+		//$("#chatwrap").mouseout(function(){document.body.style.overflowY = "scroll"})
+		//$("#chatwrap").mouseover(function(){document.body.style.overflowY = "hidden"})
+		
+		$("#chatwrap").mouseout(function(){
+			let ele = $("#chatwrap");
+			if (ele.data('timeoutId')){
+				clearTimeout(ele.data('timeoutId'));
+				ele.removeData('timeoutId'); 
+			}
+			document.body.classList.remove("hidescrollbar");
+		});
+		//$("#chatwrap").mouseover(function(){document.body.classList.add("hidescrollbar");})
+		$("#chatwrap").mouseover(function(){
+			let ele = $("#chatwrap");
+			ele.removeData('timeoutId'); 
+			let timeoutId = setTimeout(function(){
+				document.body.classList.add("hidescrollbar");
+			}, 2000)
+			ele.data('timeoutId', timeoutId); 
+		})
+		
 		CLIENT.cinemaMode = this;
 	}
 	
@@ -48,6 +70,28 @@ class Cinemamode {
 		//add toggle Cinemamode Button to top right corner of window
 //		$('<div id="cinematoggle"><span class="glyphicon glyphicon-new-window "></span></div>').appendTo("body").click(Cinemamode.toggleCinemamode);
 		$('<div id="cinematoggle"><span class="glyphicon glyphicon-new-window "></span></div>').insertAfter("#nav-collapsible .navbar-nav").click(Cinemamode.toggleCinemamode);
+		
+		//resize slider bar
+		$('<div id="chat-resizeslider" class="cinemashow" slidervar="--cinema-chatvid-width" draggable="true"></div>').insertAfter("#chatwrap");
+		$("#chat-resizeslider").on("dragend", function(e){
+			e.preventDefault();
+
+			let slidervar = this.getAttribute("slidervar");
+			let newX;
+			if (document.body.classList.contains("chat-right")){
+				newX = window.innerWidth - e.originalEvent.pageX;
+			} else {
+				newX = e.originalEvent.pageX;
+			}
+			//let newX = e.originalEvent.pageX || "400";
+			document.documentElement.style.setProperty(slidervar ,  newX + "px");
+
+			console.log("dragged slider");
+			console.log("posX:" + newX);
+			//TODO set slider limits
+			//TODO set sliderbar preview (optional, live update but debounce)
+		});
+		
 	}
 	
 	static toggleCinemamode(){
@@ -68,7 +112,8 @@ class Cinemamode {
 	
 	static getCinemamodeStyle(){
 		return `
-		body.cinemachat #motdwrap     { display: none; }
+	
+body.cinemachat #motdwrap     { display: none; }
 body.cinemachat #queue        { display: none; }
 body.cinemachat #footer       { display: none; }
 body.cinemachat #currenttitle { display: none; }
@@ -76,40 +121,10 @@ body.cinemachat .toggle-label { display: none; }
 body.cinemachat .dropLabel    { display: none; }
 body.cinemachat #videowrap-header { display: none; }
 
-#cinematoggle {
-    right: 2px;
-    top: 0 !important;
-    font-size: 16px !important;
-    padding: 1px 5px !important;
-    border: 2px solid rgba(255,255,255,0.5) !important;
-    z-index:3000;
-    cursor:pointer;
-	float:right;
-}
 
-body.cinemachat #cinematoggle {
-    text-shadow: 0 0 3px white;
-}
-body.cinemachat.synchtube #cinematoggle {
-    right: 402px;
-}
 
-body.cinemachat #chatwrap {
-    position:fixed !important;
-    top:0 !important;
-    padding:0px !important;
-    width:400px !important;
-    height:100% !important;
-    z-index:3001 !important;
-    background-color:#222222 !important;
-}
-body.cinemachat:not(.synchtube) #chatwrap { left:0 !important; }
-body.cinemachat.synchtube #chatwrap { right:0 !important; }
 
-body.cinemachat #chatwrap #messagebuffer,
-body.cinemachat #chatwrap #userlist {
-    height: calc(100% - 59px) !important;
-}
+
 
 body.cinemachat #chatline {
     width:calc(100% - 1px) !important;
@@ -120,25 +135,7 @@ body.cinemachat.synchtube #chatline { right: 0px !important; }
 
 
 
-body.cinemachat #videowrap .embed-responsive {
-    height:100% !important;
-    width: 100% !important;
-    top: 0 !important;
-}
-body.cinemachat:not(.synchtube) #videowrap .embed-responsive { right: 0 !important; }
-body.cinemachat.synchtube #videowrap .embed-responsive { left: 0 !important; }
 
-body.cinemachat #videowrap {
-    position: fixed !important;
-    top: 0 !important;
-    padding:0 !important;
-    z-index: 3000 !important;
-    background-color:black;
-    height:100% !important;
-    width: calc(100% - 400px) !important;
-}
-body.cinemachat:not(.synchtube) #videowrap { right: 0 !important; }
-body.cinemachat.synchtube #videowrap { left: 0 !important; }
 
 
 body.cinemachat #pmbar {
@@ -191,12 +188,87 @@ body:not(.cinemachat) #pollwrap .dismiss {
 body.cinemachat.cinema-nopoll #pollwrap {
     display: none!important;
 }
-/***************/
-/***************/
-/***************/
+
+
+/************************************************************/
+/************************************************************/
+
+#cinematoggle {
+    right: 2px;
+    top: 0 !important;
+    font-size: 16px !important;
+    padding: 1px 5px !important;
+    border: 2px solid rgba(255,255,255,0.5) !important;
+    z-index:3000;
+    cursor:pointer;
+	float:right;
+}
+
+
+/************************************************************/
+/************************************************************/
+
+:root{
+	--cinema-chatvid-width: 400px;
+}
+
+.cinemachat #mainpage{
+	padding-top: 0 !important;
+}
+.cinemachat #main{
+	display: flex !important;
+	height: 100vh;
+    padding-bottom: 2px;
+	margin-bottom: 15px;
+}
+
+.cinemachat.chat-left #chatwrap{
+	order: 10 !important;
+}
+.cinemachat.chat-left #videowrap{
+	order: 30 !important;
+}
+.cinemachat.chat-right #chatwrap{
+	order: 30 !important;
+}
+.cinemachat.chat-right #videowrap{
+	order: 10 !important;
+}
+.cinemachat #videowrap{
+	display: flex;
+	width: calc(100% - var(--cinema-chatvid-width, 400px));
+	/*height: 100vh;*/
+	margin: 0 !important;
+	padding: 0 !important;
+}
+.cinemachat #chatwrap{
+	display: flex;
+    flex-direction: column;
+	width: var(--cinema-chatvid-width, 400px);
+	/*height: 100vh;*/
+	margin: 0 !important;
+	padding: 0 !important;
+	z-index:3001 !important;
+	background-color:#222222 !important;
+}
+
+/*chat and video height fix*/
+.cinemachat .embed-responsive{
+	position: unset !important;
+}
+.cinemachat .linewrap{
+	height: unset !important;
+}
+
+
+.cinemachat.chat-right .navbar{
+	right: var(--cinema-chatvid-width, 400px) !important;
+}
+.cinemachat.chat-left .navbar{
+	left: var(--cinema-chatvid-width, 400px) !important;
+}
 .cinemachat .navbar{
 	z-index: 3500;
-    left: calc(var( --cinema-chatvid-width));
     opacity: 0.0;
     transition-delay: 2.0s;
     transition-duration: 1.5s;
@@ -207,6 +279,19 @@ body.cinemachat.cinema-nopoll #pollwrap {
     transition: 0.5s;
 }
 
+.cinemachat #chat-resizeslider{
+	background-color: red;
+	width: 5px;
+	height: 100%;
+	order: 20;
+	cursor: col-resize;
+}
+
+
+body.cinemachat.hidescrollbar{
+	overflow: hidden;
+	
+}
 		`;
 	}
 }
