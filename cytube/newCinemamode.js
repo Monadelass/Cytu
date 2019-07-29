@@ -1,8 +1,22 @@
+//make emotelist search input autofocus (both cinemamode and standard)
+$('#emotelist').on('shown.bs.modal', function () {
+	$('.emotelist-search')[0].focus();
+});
+
+
 class Cinemamode {
 	
 	constructor() {
+		//singleton
 		if (CLIENT.cinemaMode){
 			return CLIENT.cinemaMode;
+		}
+		
+		//fix Chat Position (Left/Right), make depending Elements properly align by adding 'conditional' CSS classes
+		if ($("#videowrap").nextAll().filter("#chatwrap").length !== 0){
+			$("body").addClass("chat-right");
+		} else {
+			$("body").addClass("chat-left");
 		}
 		
 		Cinemamode.createButtons();
@@ -11,27 +25,9 @@ class Cinemamode {
 		let cinemaCSS = Cinemamode.getCinemamodeStyle();
 		this.style = $("<style>").attr("type", "text/css").attr("id", "cinemaStyle").html(cinemaCSS).appendTo("head");
 		
-		//hide scrollbar when hovering chat
-		//$("#chatwrap").mouseout(function(){document.body.style.overflowY = "scroll"})
-		//$("#chatwrap").mouseover(function(){document.body.style.overflowY = "hidden"})
+		Cinemamode.addHideScrollbarWhileHoveringEle($("#chatwrap"), 1200);
 		
-		$("#chatwrap").mouseout(function(){
-			let ele = $("#chatwrap");
-			if (ele.data('timeoutId')){
-				clearTimeout(ele.data('timeoutId'));
-				ele.removeData('timeoutId'); 
-			}
-			document.body.classList.remove("hidescrollbar");
-		});
-		//$("#chatwrap").mouseover(function(){document.body.classList.add("hidescrollbar");})
-		$("#chatwrap").mouseover(function(){
-			let ele = $("#chatwrap");
-			ele.removeData('timeoutId'); 
-			let timeoutId = setTimeout(function(){
-				document.body.classList.add("hidescrollbar");
-			}, 2000)
-			ele.data('timeoutId', timeoutId); 
-		})
+
 		
 		CLIENT.cinemaMode = this;
 	}
@@ -62,7 +58,7 @@ class Cinemamode {
 	*/
 	
 	static createButtons(){
-		//add Button to [Layout] > Cinemamode
+		//add Button to navbar Layout > Cinemamode
 		$('a[onclick*="removeVideo"]').parent().parent().append(
 		`<li><a href='javascript:void(0)' onclick='javascript:$("#cinematoggle").click()'>Cinema Mode</a></li>`
 		);
@@ -72,25 +68,14 @@ class Cinemamode {
 		$('<div id="cinematoggle"><span class="glyphicon glyphicon-new-window "></span></div>').insertAfter("#nav-collapsible .navbar-nav").click(Cinemamode.toggleCinemamode);
 		
 		//resize slider bar
-		$('<div id="chat-resizeslider" class="cinemashow" slidervar="--cinema-chatvid-width" draggable="true"></div>').insertAfter("#chatwrap");
-		$("#chat-resizeslider").on("dragend", function(e){
-			e.preventDefault();
-
-			let slidervar = this.getAttribute("slidervar");
-			let newX;
-			if (document.body.classList.contains("chat-right")){
-				newX = window.innerWidth - e.originalEvent.pageX;
-			} else {
-				newX = e.originalEvent.pageX;
-			}
-			//let newX = e.originalEvent.pageX || "400";
-			document.documentElement.style.setProperty(slidervar ,  newX + "px");
-
-			console.log("dragged slider");
-			console.log("posX:" + newX);
-			//TODO set slider limits
-			//TODO set sliderbar preview (optional, live update but debounce)
-		});
+		Cinemamode.addResizeSlider();
+		
+		//add emote button to cinemamode (next to chat input)
+		$("#chatline").after('<div id="chatline-wrapper"></div>');
+		$("#chatline-wrapper").append($("#chatline"));
+		$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+		let emotebtnfun = jQuery._data($("#emotelistbtn")[0], "events" ).click[0].handler;
+		$("#cinema-emotes").click(emotebtnfun);
 		
 	}
 	
@@ -110,18 +95,133 @@ class Cinemamode {
 		handleWindowResize();
 	}
 	
+	static addHideScrollbarWhileHoveringEle(ele, delay){
+		ele.mouseout(function(e){
+			//this is the original element the event handler was assigned to
+			let hoveredele = e.toElement || e.relatedTarget;
+
+			if ( this.contains(hoveredele) ) {
+			   return;	//we dont want the event do anything when it is triggered by a child element
+			}
+			//let ele = $(this);
+			if (ele.data('timeoutId')){
+				clearTimeout(ele.data('timeoutId'));
+				ele.removeData('timeoutId'); 
+			}
+			document.body.classList.remove("hidescrollbar");
+		});
+		ele.mouseover(function(){
+			//let ele = $(this);
+			if (ele.data('timeoutId') ){
+				return;	//if timeout function already set nothing todo here
+			}
+			let timeoutId = setTimeout(function(){
+				document.body.classList.add("hidescrollbar");
+			}, delay)
+			ele.data('timeoutId', timeoutId); 
+		});
+	}
+	
+	static addResizeSlider(){
+		
+		let wrapper = $("#main");
+		wrapper.append('<div id="chat-resizeslider" class="cinemashow" slidervar="--cinema-chatvid-width" draggable="true"></div>');
+		
+		let rslidertop = document.createElement("div");
+		let rsliderbottom = document.createElement("div");
+		rslidertop.id = "rslidertop";
+		rsliderbottom.id = "rsliderbottom";
+		rslidertop.className = "resizeslider";
+		rsliderbottom.className = "resizeslider";
+		
+		wrapper.append(rslidertop);
+		wrapper.append(rsliderbottom);
+		
+		$("#chat-resizeslider").on("dragstart", function(e){
+			let img = new Image();
+			img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+			e.originalEvent.dataTransfer.setDragImage(img, 0, 0);
+			
+			let mouseX = e.originalEvent.pageX - this.offsetLeft;
+			let mouseY = e.originalEvent.pageY - this.offsetTop;
+			
+			rslidertop.style.display = "block";
+			rsliderbottom.style.display = "block";
+			
+			rslidertop.style.left = mouseX + "px";
+			rslidertop.style.height = (mouseY - 10) + "px";
+			rsliderbottom.style.left = mouseX + "px";
+			rsliderbottom.style.height = (this.clientHeight - mouseY - 10) + "px";
+		});
+
+		wrapper.on('dragover', function(e){
+			let mouseX = e.originalEvent.pageX - this.offsetLeft;
+			let mouseY = e.originalEvent.pageY - this.offsetTop;
+			
+			let minX = this.clientWidth * 0.1; //10%
+			let maxX = this.clientWidth * 0.2; //20%
+			
+			if (document.body.classList.contains("chat-right")){
+				[minX, maxX] = [maxX, minX]; //swap values
+			} 
+			
+			let newmouseX = mouseX;
+			if (mouseX < minX) {
+					newmouseX = minX;
+			} else if (mouseX > (this.clientWidth - maxX) ) {
+					newmouseX = this.clientWidth - maxX;
+			} 
+			rslidertop.style.left = newmouseX + "px";
+			rsliderbottom.style.left = newmouseX + "px";
+			
+			rslidertop.style.height = (mouseY - 10) + "px";
+			rsliderbottom.style.height = (this.clientHeight - mouseY - 10) + "px";
+		});
+		
+		$("#chat-resizeslider").on("dragend", function(e){
+			e.preventDefault();
+
+			let slidervar = this.getAttribute("slidervar");
+			let vid
+			let newX;
+			if (document.body.classList.contains("chat-right")){
+				newX = window.innerWidth - e.originalEvent.pageX;
+			} else {
+				newX = e.originalEvent.pageX;
+			}
+			let limit_min = window.innerWidth * 0.1;	//10%
+			let limit_max = window.innerWidth * 0.8;	//20%
+			if (newX < limit_min){newX = limit_min;}
+			else if (newX > limit_max){newX = limit_max;}
+
+			document.documentElement.style.setProperty(slidervar ,  newX + "px");
+
+
+			rsliderbottom.style.display = "none";
+			rslidertop.style.display = "none";
+			
+			//TODO set slider limits
+
+		});
+		
+	}
+	
 	static getCinemamodeStyle(){
 		return `
 	
 body.cinemachat #motdwrap     { display: none; }
-body.cinemachat #queue        { display: none; }
-body.cinemachat #footer       { display: none; }
 body.cinemachat #currenttitle { display: none; }
 body.cinemachat .toggle-label { display: none; }
 body.cinemachat .dropLabel    { display: none; }
 body.cinemachat #videowrap-header { display: none; }
 
+.col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+	min-height: 0px;
+}
 
+body.cinemachat #mainpage > .container{
+	width: auto !important;
+}
 
 
 
@@ -186,7 +286,7 @@ body:not(.cinemachat) #pollwrap .dismiss {
 }
 
 body.cinemachat.cinema-nopoll #pollwrap {
-    display: none!important;
+    display: none !important;
 }
 
 
@@ -237,7 +337,7 @@ body.cinemachat.cinema-nopoll #pollwrap {
 .cinemachat #videowrap{
 	display: flex;
 	width: calc(100% - var(--cinema-chatvid-width, 400px));
-	/*height: 100vh;*/
+	height: 100vh;
 	margin: 0 !important;
 	padding: 0 !important;
 }
@@ -245,7 +345,7 @@ body.cinemachat.cinema-nopoll #pollwrap {
 	display: flex;
     flex-direction: column;
 	width: var(--cinema-chatvid-width, 400px);
-	/*height: 100vh;*/
+	height: 100vh;
 	margin: 0 !important;
 	padding: 0 !important;
 	z-index:3001 !important;
@@ -257,7 +357,7 @@ body.cinemachat.cinema-nopoll #pollwrap {
 	position: unset !important;
 }
 .cinemachat .linewrap{
-	height: unset !important;
+	height: 100% !important;
 }
 
 
@@ -292,6 +392,18 @@ body.cinemachat.hidescrollbar{
 	overflow: hidden;
 	
 }
+
+.resizeslider{
+	position: absolute;
+	z-index: 3400;
+    display: block;
+    background-color:black;
+    left: 0;
+    margin-left:1px;
+    width: 4px;
+}
+#rslidertop{top:0;}
+#rsliderbottom{bottom:0;}
 		`;
 	}
 }
