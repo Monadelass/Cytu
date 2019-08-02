@@ -1,4 +1,7 @@
+//TODO fix userlist
+
 //TODO make resize slider beautiful
+//TODO autosnap resize to max video width
 //TODO make ELS work in whisper chat too
 //TODO Hide Chat
 //		create a minimize bar with new/unread chat messages/polls/whisper label
