@@ -49,13 +49,19 @@ let miscCSS = `
 /************************************/
 #chatheader{
 	display: flex !important;
+	/*overflow: auto;*/
+	flex-wrap: wrap;
 }
 .chat-right #chatheader{
 	flex-direction: row-reverse;
 }
+#chatheader *{
+	order: 100
+}
 #chatheader span{
 	user-select: none;
 }
+
 #userlisttoggle{
 	order: 10;
 }
@@ -64,7 +70,14 @@ let miscCSS = `
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
+	/*flex: 1;*/
+	min-width: 26px;
 }
+#chatheader .label{
+	height: unset;
+	margin-bottom: .3em;
+}
+
 /************************************/
 /*	 Chatheader Config Cog			*/
 /************************************/
@@ -105,6 +118,11 @@ class Cinemamode {
 		} else {
 			$("body").addClass("chat-left");
 		}
+		
+		//fix chat layout, put #userlist and #messagebuffer in a wrapper div
+		$("#chatheader").after('<div id="ulchatwrapper"></div>');
+		$("#ulchatwrapper").append($("#userlist,#messagebuffer"));
+		
 		
 		Cinemamode.createButtons();
 		//Cinemamode.registerCinemaCommand()
@@ -443,8 +461,25 @@ body.cinemachat.cinema-nopoll #pollwrap {
 .cinemachat .embed-responsive{
 	position: unset !important;
 }
-.cinemachat .linewrap{
+.cinemachat #ulchatwrapper{
+	display: flex;
+	flex: 1;
+}
+
+.cinemachat #messagebuffer{
 	height: 100% !important;
+	flex: 1;
+}
+.cinemachat #userlist{
+	height: 100% !important;
+}
+
+#userlist{
+	word-break: break-word;
+}
+.userlist_item{
+	padding: .3em .0em .0em .1em;
+    line-height: 1em;
 }
 
 
