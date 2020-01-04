@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         waifupara beautify
 // @namespace    vvv.sylph
-// @version      1.0.3
+// @version      1.0.4
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/btfy%20waifuparade.user.js
@@ -333,6 +333,9 @@ return `
 }
 .files-t-row {
     display: table-row;
+}
+.files-t-row:hover {
+    background-color: whitesmoke;
 }
 .files-t-head {
     background-color: #e4e4e4;
