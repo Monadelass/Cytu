@@ -1,17 +1,25 @@
 // ==UserScript==
 // @name         new Cinemamode
 // @namespace    vvv.sylph
-// @version      1.0.0
+// @version      1.1.1
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/cytube/userscript/newCinemamode.user.js
 // @match        https://cytu.be/r/wieherbuhq
+// @match        https://cytu.be/r/krautsynch
+// @match        https://cytu.be/r/bener
 // @grant        none
 // @run-at       document-start
 // @require      http://code.jquery.com/jquery-3.3.1.min.js
 // ==/UserScript==
+
+//NOTE the script only executes if the channel name is written in lowercase
+
+
 setTimeout(
     function(){
+
+
 
 $('#emotelist').on('shown.bs.modal', function () {
 	$('.emotelist-search')[0].focus();
@@ -45,13 +53,19 @@ let miscCSS = `
 /************************************/
 #chatheader{
 	display: flex !important;
+	/*overflow: auto;*/
+	flex-wrap: wrap;
 }
 .chat-right #chatheader{
 	flex-direction: row-reverse;
 }
+#chatheader *{
+	order: 100
+}
 #chatheader span{
 	user-select: none;
 }
+
 #userlisttoggle{
 	order: 10;
 }
@@ -60,7 +74,14 @@ let miscCSS = `
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
+	/*flex: 1;*/
+	min-width: 26px;
 }
+#chatheader .label{
+	height: unset;
+	margin-bottom: .3em;
+}
+
 /************************************/
 /*	 Chatheader Config Cog			*/
 /************************************/
@@ -101,6 +122,11 @@ class Cinemamode {
 		} else {
 			$("body").addClass("chat-left");
 		}
+
+		//fix chat layout, put #userlist and #messagebuffer in a wrapper div
+		$("#chatheader").after('<div id="ulchatwrapper"></div>');
+		$("#ulchatwrapper").append($("#userlist,#messagebuffer"));
+
 
 		Cinemamode.createButtons();
 		//Cinemamode.registerCinemaCommand()
@@ -439,8 +465,27 @@ body.cinemachat.cinema-nopoll #pollwrap {
 .cinemachat .embed-responsive{
 	position: unset !important;
 }
-.cinemachat .linewrap{
+.cinemachat #ulchatwrapper{
+	display: flex;
+	flex: 1;
+	height: 100%;
+	overflow: auto;
+}
+
+.cinemachat #messagebuffer{
 	height: 100% !important;
+	flex: 1;
+}
+.cinemachat #userlist{
+	height: 100% !important;
+}
+
+#userlist{
+	word-break: break-word;
+}
+.userlist_item{
+	padding: .3em .0em .0em .1em;
+    line-height: 1em;
 }
 
 
@@ -473,10 +518,8 @@ body.cinemachat.cinema-nopoll #pollwrap {
 
 body.cinemachat.hidescrollbar{
 	overflow: hidden;
-
 }
 
-/*  */
 /************************************/
 /*	 		Resize Slider		 	*/
 /************************************/
@@ -520,6 +563,34 @@ body.cinemchat #chatline{
 	-webkit-margin-after:7px;
 }
 
+/************************************/
+/*	 		Emotelist Fix		 	*/
+/************************************/
+.modal{
+	z-index: 4500;
+}
+.cinemachat #emotelist.in{
+	display: flex !important;
+	height: 100vh;
+}
+.cinemachat .modal-backdrop.in{
+	height: 100% !important;
+}
+.cinemachat .modal-content{
+	background-color: #2e333860;
+}
+.cinemachat .modal-header{
+	display:none;
+}
+.cinemachat .modal-footer{
+	display:none;
+}
+.cinemachat .pagination{
+	margin: 0;
+}
+.cinemachat .modal-dialog{
+	margin-top: 10px;
+}
 		`;
 	}
 }
@@ -690,9 +761,9 @@ class WHQbtfyELS{
 				//console.log(`debug: emotestr=${emotestr}`);
 				if (emotestr != '/'){
 					if (els.isFullsearchOn){
-						els.currentEmotes = emotelist.filter((e) => {return e.name.includes(emotestr.substr(1));});
+						els.currentEmotes = emotelist.filter((e) => {return e.name.toLowerCase().includes(emotestr.substr(1));});
 					} else {
-						els.currentEmotes = emotelist.filter((e) => {return e.name.startsWith(emotestr);});
+						els.currentEmotes = emotelist.filter((e) => {return e.name.toLowerCase().startsWith(emotestr);});
 					}
 					if (!els.isRandomizeemotesOn){
 						els.currentEmotes = els.currentEmotes.sort();	//sort emotes to bring the most relevant ones to the front
@@ -1029,5 +1100,4 @@ static shuffle(array) {
 }
 
 WHQbtfyELS.getInstance();
-
-},4000);
+},8000);
