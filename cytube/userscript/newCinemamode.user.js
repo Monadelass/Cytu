@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         new Cinemamode
 // @namespace    vvv.sylph
-// @version      1.1.1
+// @version      1.1.2
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/cytube/userscript/newCinemamode.user.js
@@ -9,17 +9,12 @@
 // @match        https://cytu.be/r/krautsynch
 // @match        https://cytu.be/r/bener
 // @grant        none
-// @run-at       document-start
-// @require      http://code.jquery.com/jquery-3.3.1.min.js
+// @run-at       document-end
 // ==/UserScript==
 
 //NOTE the script only executes if the channel name is written in lowercase
 
-
-setTimeout(
-    function(){
-
-
+function newCinemamodeScriptRun(){
 
 $('#emotelist').on('shown.bs.modal', function () {
 	$('.emotelist-search')[0].focus();
@@ -1100,4 +1095,27 @@ static shuffle(array) {
 }
 
 WHQbtfyELS.getInstance();
-},8000);
+
+} //function END
+
+
+var checkExist = setInterval(function() {
+   //be sure that the site is ready for usercript execution
+   if (document.readyState == 'complete'
+       && $("#emotelistbtn").length > 0
+       && jQuery._data($("#emotelistbtn")[0], "events" ) )
+   {
+       clearInterval(checkExist);
+
+       if(!window.jQuery)
+       {
+           let jqueryscript = document.createElement('script');
+           jqueryscript.type = "text/javascript";
+           jqueryscript.src = "http://code.jquery.com/jquery-3.3.1.min.js";
+           document.getElementsByTagName('head')[0].appendChild(jqueryscript);
+       }
+
+       console.log("~~Run newCinemamode Script!");
+       newCinemamodeScriptRun();
+   }
+}, 400); // check every 400ms if document complete
