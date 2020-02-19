@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         new Cinemamode
 // @namespace    vvv.sylph
-// @version      1.1.2
+// @version      1.1.3
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/cytube/userscript/newCinemamode.user.js
@@ -631,7 +631,9 @@ class WHQbtfyELS{
 		this.isShowEmoteCaptionOn = true;
 		this.isAutohideOn = true;
 		this.isOverridetabOn = false;
-		this.allEmotes = [...EMOTELIST.emotes];		//clone EMOTElist because it can be filtered by the normal emotelist
+
+		this._allEmotes = [];
+        this.getAllEmotes();
 		this.currentEmotes = [];
 
 		//remember #chatline event for (reset) overriding that event
@@ -685,6 +687,14 @@ class WHQbtfyELS{
 		notice.delay(2000).fadeOut();
 		setTimeout(function(){notice.remove()}, 3000);
 	}
+
+    getAllEmotes(){
+        //empty emotelist or official emotelist is bigger (newly added emotes?)
+        if (this._allEmotes.length == 0 || this._allEmotes.length < EMOTELIST.emotes.length){
+            this._allEmotes = [...EMOTELIST.emotes] //clone EMOTElist because it can be filtered by the normal emotelist
+        }
+        return this._allEmotes;
+    }
 
 	static overrideCtrlB(e){
 		if (e.ctrlKey && e.keyCode == 66){
@@ -749,7 +759,7 @@ class WHQbtfyELS{
 				let emotestr = txt.substring(slashpos-1, cursorpos);
 				let emotelist;
 				if (elsHotkeyPressed){
-					emotelist = els.allEmotes;
+					emotelist = els.getAllEmotes();
 				} else {
 					emotelist = els.currentEmotes;
 				}
