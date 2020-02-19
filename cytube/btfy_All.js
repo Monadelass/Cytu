@@ -374,9 +374,9 @@ class WHQbtfyELS{
 				//console.log(`debug: emotestr=${emotestr}`);
 				if (emotestr != '/'){
 					if (els.isFullsearchOn){
-						els.currentEmotes = emotelist.filter((e) => {return e.name.includes(emotestr.substr(1));});
+						els.currentEmotes = emotelist.filter((e) => {return e.name.toLowerCase().includes(emotestr.substr(1));});
 					} else {
-						els.currentEmotes = emotelist.filter((e) => {return e.name.startsWith(emotestr);});
+						els.currentEmotes = emotelist.filter((e) => {return e.name.toLowerCase().startsWith(emotestr);});
 					}
 					if (!els.isRandomizeemotesOn){
 						els.currentEmotes = els.currentEmotes.sort();	//sort emotes to bring the most relevant ones to the front
