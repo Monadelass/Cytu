@@ -58,10 +58,20 @@ function btfyCinemamode(){
 	window.changeCinemaChatSize = changeCinemaChatSize;
 	window.toggleCinemaPlaylist = toggleCinemaPlaylist;
 	
-	//add emote button to cinemamode
-	$("#chatline").after('<div id="chatline-wrapper"></div>');
-	$("#chatline-wrapper").append($("#chatline"));
-	$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+	//add emote button to cinemamode (auch fix <form> wrapup)
+	$("#messagebuffer").after('<div id="chatline-wrapper"></div>');
+	let chatlineparent = $("#chatline").parent()[0]
+	//Wenn parent of chatline ein <form> wrapper ist
+	if (chatlineparent.nodeName == "FORM"){
+		$("#chatline-wrapper").append($(chatlineparent));
+		$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+		$(chatlineparent).css('width', '100%')
+	} else {
+		$("#chatline-wrapper").append($("#chatline"));
+		$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+	}
+	
+	//add emote button click event
 	let emotebtnfun = jQuery._data($("#emotelistbtn")[0], "events" ).click[0].handler;
 	$("#cinema-emotes").click(emotebtnfun);
 	
@@ -134,7 +144,7 @@ function btfyCinemamode(){
 		#cinema-emote-smiley{
 			margin-top:auto;
 			margin-bottom: 23px;
-			-webkit-margin-after:7px;
+			/* -webkit-margin-after:7px; */
 		}
 		.cinemachat #emotelist{
 			z-index: 3000;
@@ -244,12 +254,14 @@ class WHQbtfyELS{
 		this.textbox = document.getElementById("chatline");
 		this.elsparentdiv = elsparentdiv;
 		this.isOn = false;
-		this.isRandomizeemotesOn = false;
-		this.isFullsearchOn = false;
+		this.isRandomizeemotesOn = true;
+		this.isFullsearchOn = true;
 		this.isShowEmoteCaptionOn = true;
 		this.isAutohideOn = true;
-		this.isOverridetabOn = false;
-		this.allEmotes = [...EMOTELIST.emotes];		//clone EMOTElist because it can be filtered by the normal emotelist
+		this.isOverridetabOn = true;
+
+		this._allEmotes = [];
+        this.getAllEmotes(); //clone EMOTElist because it can be filtered by the normal emotelist
 		this.currentEmotes = [];
 		
 		//remember #chatline event for (reset) overriding that event
@@ -304,6 +316,13 @@ class WHQbtfyELS{
 		setTimeout(function(){notice.remove()}, 3000);
 	}
 	
+    getAllEmotes(){
+        //empty emotelist or official emotelist is bigger (newly added emotes?)
+        if (this._allEmotes.length == 0 || this._allEmotes.length < EMOTELIST.emotes.length){
+            this._allEmotes = [...EMOTELIST.emotes] //clone EMOTElist because it can be filtered by the normal emotelist
+        }
+        return this._allEmotes;
+    }
 	static overrideCtrlB(e){
 		if (e.ctrlKey && e.keyCode == 66){
 			e.preventDefault();
@@ -326,7 +345,7 @@ class WHQbtfyELS{
 		
 		let iscontinuetyping = false;
 		//continue ELS lookup if user is typing (input is a typeable character but not a number (alphabetic key or special character key))
-		if (els.isOn){ 
+		if (els.isOn){
 			if ( (e.keyCode >= 65 && e.keyCode <= 90) || [192, 189, 187, 219, 221, 186, 222, 220, 226, 188, 190].indexOf(e.keyCode) > -1 ) {
 				iscontinuetyping = true;
 			}
@@ -367,7 +386,7 @@ class WHQbtfyELS{
 				let emotestr = txt.substring(slashpos-1, cursorpos);
 				let emotelist;
 				if (elsHotkeyPressed){
-					emotelist = els.allEmotes;
+					emotelist = els.getAllEmotes();
 				} else {
 					emotelist = els.currentEmotes;
 				}
@@ -384,7 +403,7 @@ class WHQbtfyELS{
 				} else{
 					els.currentEmotes = emotelist;
 				}
-				if (els.isRandomizeemotesOn){ 
+				if (els.isRandomizeemotesOn){
 					//shuffle emotes
 					els.currentEmotes = WHQbtfyELS.shuffle(els.currentEmotes);
 				}
@@ -408,7 +427,7 @@ class WHQbtfyELS{
 					return;
 				}
 				let emote = els.currentEmotes[num - 1].name;
-				WHQbtfyELS.addEmoteToTextbox(emote, 1); 
+				WHQbtfyELS.addEmoteToTextbox(emote, 1);
 			}
 		}
 	}
@@ -486,12 +505,14 @@ class WHQbtfyELS{
 			].map((x) => {if (x){return "checked";} else {return "";} });
 	
 		$("#whq-config-box1").append(`<div id="config-els-cat">
-			<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize ELS emotes</label></div>
-			<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch ELS emotes</label></div>
-			<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show ELS caption</label></div>
-			<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"${d}><label for="els-option-autohide">autohide ELS</label></div>
-			<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label></div>
-			<button id="whq-config-els-save" class="whq-config-savebtn">Save</button>
+			<div id="config-els-options">
+				<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize ELS emotes</label><small> (normal order)</small></div>
+				<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch ELS emotes</label><small> (search start of string)</small></div>
+				<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show ELS caption</label><small> (just picture)</small></div>
+				<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"${d}><label for="els-option-autohide">autohide ELS</label><small> (stay open offclick)</small></div>
+				<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label><small> (ctrl+b)</small></div>
+				<button id="whq-config-els-save" class="whq-config-savebtn">Save to Cookie</button>
+			</div>
 		</div>`);
 
 		$("#els-option-randomize").on("click", function(e){
@@ -574,11 +595,10 @@ class WHQbtfyELS{
 	
 	retrieveConfig(){
 		let optionint = document.cookie.replace(/(?:(?:^|.*;\s*)whqconfigels\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-		if(!optionint){
-			return;
+		if(optionint){
+			let optionarr = WHQbtfyELS.intToBitarr(optionint, 5);
+            [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn] = optionarr;
 		}
-		let optionarr = WHQbtfyELS.intToBitarr(optionint, 5);
-		[this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn] = optionarr;
 		
 		if (this.isRandomizeemotesOn){
 			this.setON_Randomizeemotes();
@@ -605,7 +625,7 @@ class WHQbtfyELS{
 		return res;
 	}
 	
-	//intToBitarr(num, n) -> 
+	//intToBitarr(num, n) ->
 	static intToBitarr(inta, n){
 		let res = [];
         for (let i = 0; i < n; i++){
@@ -659,11 +679,11 @@ return `
 	word-break: break-all;
 }
 #elsnoticebox{
-	position:absolute; 
-	color:red; 
-	font-size:2em; 
-	top:0; 
-	margin: 30px 10px; 
+	position:absolute;
+	color:red;
+	font-size:2em;
+	top:0;
+	margin: 30px 10px;
 	line-height:0.5em;
 	z-index: 910;
 }
@@ -687,7 +707,7 @@ return `
 	flex-direction: column;
 }
 .whq-config-savebtn{
-	float: right;
+	float: left;
 	color: black;
 }
 `;

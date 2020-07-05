@@ -897,7 +897,6 @@ class WHQbtfyELS{
 				<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label><small> (ctrl+b)</small></div>
 				<button id="whq-config-els-save" class="whq-config-savebtn">Save to Cookie</button>
 			</div>
-			<div>
 		</div>`);
 
 		$("#els-option-randomize").on("click", function(e){
