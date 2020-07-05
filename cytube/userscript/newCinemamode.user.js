@@ -174,9 +174,19 @@ class Cinemamode {
 		Cinemamode.addResizeSlider();
 
 		//add emote button to cinemamode (next to chat input) *************************************
-		$("#chatline").after('<div id="chatline-wrapper"></div>');
-		$("#chatline-wrapper").append($("#chatline"));
-		$("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+		$("#ulchatwrapper").after('<div id="chatline-wrapper"></div>');
+        let chatlineparent = $("#chatline").parent()[0]
+        //Wenn parent of chatline ein <form> wrapper ist
+        if (chatlineparent.nodeName == "FORM"){
+            $("#chatline-wrapper").append($(chatlineparent));
+            $("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+            $(chatlineparent).css('width', '100%')
+        } else {
+            $("#chatline-wrapper").append($("#chatline"));
+            $("#chatline-wrapper").append($('<button id="cinema-emotes" class="cinemashow hide" onclick="" ><div id="cinema-emote-smiley">☺</div></button>'));
+        }
+
+
 		let emotebtnfun = jQuery._data($("#emotelistbtn")[0], "events" ).click[0].handler;
 		$("#cinema-emotes").click(emotebtnfun);
 
@@ -555,7 +565,7 @@ body.cinemchat #chatline{
 #cinema-emote-smiley{
 	margin-top:auto;
 	margin-bottom: 23px;
-	-webkit-margin-after:7px;
+	/*-webkit-margin-after:7px;*/
 }
 
 /************************************/
@@ -573,6 +583,7 @@ body.cinemchat #chatline{
 }
 .cinemachat .modal-content{
 	background-color: #2e333860;
+	box-shadow: 0;
 }
 .cinemachat .modal-header{
 	display:none;
@@ -626,11 +637,11 @@ class WHQbtfyELS{
 		this.textbox = document.getElementById("chatline");
 		this.elsparentdiv = elsparentdiv;
 		this.isOn = false;
-		this.isRandomizeemotesOn = false;
-		this.isFullsearchOn = false;
+		this.isRandomizeemotesOn = true;
+		this.isFullsearchOn = true;
 		this.isShowEmoteCaptionOn = true;
 		this.isAutohideOn = true;
-		this.isOverridetabOn = false;
+		this.isOverridetabOn = true;
 
 		this._allEmotes = [];
         this.getAllEmotes();
@@ -878,12 +889,15 @@ class WHQbtfyELS{
 			].map((x) => {if (x){return "checked";} else {return "";} });
 
 		$("#config-cog-box1").append(`<div id="config-els-cat">
-			<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize ELS emotes</label></div>
-			<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch ELS emotes</label></div>
-			<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show ELS caption</label></div>
-			<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"${d}><label for="els-option-autohide">autohide ELS</label></div>
-			<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label></div>
-			<button id="whq-config-els-save" class="whq-config-savebtn">Save</button>
+			<div id="config-els-options">
+				<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize ELS emotes</label><small> (normal order)</small></div>
+				<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch ELS emotes</label><small> (search start of string)</small></div>
+				<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show ELS caption</label><small> (just picture)</small></div>
+				<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"${d}><label for="els-option-autohide">autohide ELS</label><small> (stay open offclick)</small></div>
+				<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label><small> (ctrl+b)</small></div>
+				<button id="whq-config-els-save" class="whq-config-savebtn">Save to Cookie</button>
+			</div>
+			<div>
 		</div>`);
 
 		$("#els-option-randomize").on("click", function(e){
@@ -929,7 +943,6 @@ class WHQbtfyELS{
 			WHQbtfyELS.getInstance().setConfig();
 		});
 
-
 	}
 
 	setON_Randomizeemotes(){
@@ -966,11 +979,11 @@ class WHQbtfyELS{
 
 	retrieveConfig(){
 		let optionint = document.cookie.replace(/(?:(?:^|.*;\s*)whqconfigels\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-		if(!optionint){
-			return;
+		if(optionint){
+			let optionarr = WHQbtfyELS.intToBitarr(optionint, 5);
+            [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn] = optionarr;
 		}
-		let optionarr = WHQbtfyELS.intToBitarr(optionint, 5);
-		[this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn] = optionarr;
+
 
 		if (this.isRandomizeemotesOn){
 			this.setON_Randomizeemotes();
@@ -1079,9 +1092,10 @@ return `
 	flex-direction: column;
 }
 .whq-config-savebtn{
-	float: right;
+	float: leftt;
 	color: black;
 }
+
 `;
 }
 
