@@ -241,7 +241,7 @@ class Cinemamode {
 	static addResizeSlider(){
 
 		let wrapper = $("#main");
-		wrapper.append('<div id="chat-resizeslider" class="cinemashow" slidervar="--cinema-chatvid-width" draggable="true"></div>');
+		wrapper.append('<div id="chat-resizeslider" class="cinemashow" slidervar="--cinema-chatvid-width" draggable="true">⇆</div>');
 
 		let rslidertop = document.createElement("div");
 		let rsliderbottom = document.createElement("div");
@@ -437,6 +437,11 @@ body.cinemachat.cinema-nopoll #pollwrap {
 	margin-bottom: 15px;
 }
 
+/* scrollbars fix for chat right - stupid ass #main element somehow overflows when chat is right*/
+.cinemachat.chat-right #main{
+	overflow: hidden;
+}
+
 .cinemachat.chat-left #chatwrap{
 	order: 10 !important;
 }
@@ -513,11 +518,21 @@ body.cinemachat.cinema-nopoll #pollwrap {
 }
 
 .cinemachat #chat-resizeslider{
-	background-color: red;
-	width: 5px;
-	height: 100%;
-	order: 20;
-	cursor: col-resize;
+    order: 20;
+    cursor: col-resize;
+    background: #272727 no-repeat center center;
+    top: 50%;
+    position: absolute;
+
+    border: dimgrey 1px solid;
+}
+.cinemachat.chat-right #chat-resizeslider{
+	right: var(--cinema-chatvid-width, 400px) !important;
+    margin-right: -5px;
+}
+.cinemachat.chat-left #chat-resizeslider{
+	left: var(--cinema-chatvid-width, 400px) !important;
+    margin-left: -5px;
 }
 
 
