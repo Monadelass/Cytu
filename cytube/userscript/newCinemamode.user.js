@@ -523,6 +523,7 @@ body.cinemachat.cinema-nopoll #pollwrap {
     background: #272727 no-repeat center center;
     top: 50%;
     position: absolute;
+    z-index: 3250;
 
     border: dimgrey 1px solid;
 }
