@@ -533,7 +533,12 @@ body.cinemachat.cinema-nopoll #pollwrap {
 }
 .cinemachat.chat-left #chat-resizeslider{
 	left: var(--cinema-chatvid-width, 400px) !important;
-    margin-left: -11px;
+    margin-left: -10px;
+    font-size: 10px;
+    height: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 
