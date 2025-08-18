@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         new Cinemamode
 // @namespace    vvv.sylph
-// @version      1.1.4
+// @version      1.1.5
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/cytube/userscript/newCinemamode.user.js
@@ -171,11 +171,13 @@ class Cinemamode {
 
 		//add toggle Cinemamode Button to top right corner of window ******************************
 		$('<div id="cinematoggle"><span class="glyphicon glyphicon-new-window "></span></div>').insertAfter("#nav-collapsible .navbar-nav").click(Cinemamode.toggleCinemamode);
-        $("#videowrap").append('<div id="cinematoggle2"><span class="glyphicon glyphicon-new-window "></span></div>').click(Cinemamode.toggleCinemamode);
+        $("#videowrap").append('<div id="cinematoggle2"><span class="glyphicon glyphicon-new-window "></span></div>');
+        $('#cinematoggle2').click(Cinemamode.toggleCinemamode);
 
 
 		//resize slider bar
 		Cinemamode.addResizeSlider();
+
 
 		//add emote button to cinemamode (next to chat input) *************************************
 		$("#ulchatwrapper").after('<div id="chatline-wrapper"></div>');
@@ -214,7 +216,13 @@ class Cinemamode {
             }
 		} else { //when exiting cinemamode
             document.querySelector('#motdrow').style.display = ''; // MOTD anzeigen
-            document.exitFullscreen();
+            try{
+                document.exitFullscreen();
+            } catch(e) { //error hiding
+                if (!(e instanceof TypeError)) {
+                    throw e;
+                }
+            }
         }
 
 		$("body").toggleClass("cinemachat");
@@ -256,6 +264,7 @@ class Cinemamode {
 	static addResizeSlider(){
 
 		let wrapper = $("#main");
+        let wrapper2 = document.getElementById('main'); //same but native js
 		wrapper.append('<div id="chat-resizeslider" class="cinemashow" slidervar="--cinema-chatvid-width" draggable="true">⇆</div>');
 
 		let rslidertop = document.createElement("div");
@@ -283,31 +292,44 @@ class Cinemamode {
 			rslidertop.style.height = (mouseY - 10) + "px";
 			rsliderbottom.style.left = mouseX + "px";
 			rsliderbottom.style.height = (this.clientHeight - mouseY - 10) + "px";
+
+            $("#videowrap").addClass('no-pointer-event'); //video iframe seems to fuck with dragover events, this should prevent this #no-pointer-event
 		});
 
-		wrapper.on('dragover', function(e){
-			let mouseX = e.originalEvent.pageX - this.offsetLeft;
-			let mouseY = e.originalEvent.pageY - this.offsetTop;
+        //change cursor while moving the slider
+        $('body').on('dragover', function(e) {
+            if ($('body').hasClass('cinemachat')){
+                e.preventDefault();
+            }
+        });
 
-			let minX = this.clientWidth * 0.1; //10%
-			let maxX = this.clientWidth * 0.2; //20%
+        wrapper2.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            console.log(`$(e.pageX)`);
+            let mouseX = e.pageX - wrapper2.offsetLeft;
+            let mouseY = e.pageY - wrapper2.offsetTop;
+            console.log(`mouseX = ${mouseX} ; mouseY = ${mouseY}`);
 
-			if (document.body.classList.contains("chat-right")){
-				[minX, maxX] = [maxX, minX]; //swap values
-			}
+            console.log("target= ", e.target);
+            let minX = ~~(wrapper2.clientWidth * 0.1); //10% width
+            let maxX = ~~(wrapper2.clientWidth * 0.9); //90% width
+            console.log(`minX = ${minX} ; maxX = ${maxX}`);
 
-			let newmouseX = mouseX;
-			if (mouseX < minX) {
-					newmouseX = minX;
-			} else if (mouseX > (this.clientWidth - maxX) ) {
-					newmouseX = this.clientWidth - maxX;
-			}
-			rslidertop.style.left = newmouseX + "px";
-			rsliderbottom.style.left = newmouseX + "px";
+            let newmouseX = mouseX;
+            if (mouseX < minX) {
+                newmouseX = minX;
+            } else if (mouseX > maxX) {
+                newmouseX = maxX;
+            }
+            console.log(`newmouseX = ${newmouseX}`);
+            rslidertop.style.left = newmouseX + "px";
+            rsliderbottom.style.left = newmouseX + "px";
 
-			rslidertop.style.height = (mouseY - 10) + "px";
-			rsliderbottom.style.height = (this.clientHeight - mouseY - 10) + "px";
-		});
+            rslidertop.style.height = (mouseY - 10) + "px";
+            rsliderbottom.style.height = (wrapper2.clientHeight - mouseY - 10) + "px";
+
+});
+
 
 		$("#chat-resizeslider").on("dragend", function(e){
 			e.preventDefault();
@@ -321,15 +343,17 @@ class Cinemamode {
 				newX = e.originalEvent.pageX;
 			}
 			let limit_min = window.innerWidth * 0.1;	//10%
-			let limit_max = window.innerWidth * 0.8;	//20%
+			let limit_max = window.innerWidth * 0.9;	//10%
 			if (newX < limit_min){newX = limit_min;}
 			else if (newX > limit_max){newX = limit_max;}
 
-			document.documentElement.style.setProperty(slidervar ,  newX + "px");
+			document.documentElement.style.setProperty(slidervar, newX + "px");
 
 
 			rsliderbottom.style.display = "none";
 			rslidertop.style.display = "none";
+
+            $("#videowrap").removeClass('no-pointer-event'); //undo dragover fix for iframe videos see #no-pointer-event
 
 			//TODO set slider limits
 
@@ -596,7 +620,7 @@ body.cinemachat.hidescrollbar{
 	position: absolute;
 	z-index: 3250;
     display: block;
-    background-color:black;
+    background-color:#2a2b46;
     left: 0;
     margin-left:1px;
     width: 4px;
@@ -665,9 +689,12 @@ body.cinemchat #chatline{
 /************************************/
 /*	 		Misc         		 	*/
 /************************************/
-.cinemachat .cinemahide{
-    display: none !important;
-}
+.cinemachat .cinemahide{ display: none !important; } /*use .cinemahide class to hide element in cinemamode */
+
+.cinemashow { display: none;} /*use .cinemashow class to hide element outside cinemamode */
+.cinemachat .cinemashow{ display: unset; }
+
+.no-pointer-event{ pointer-events: none; }
 		`;
 	}
 }
