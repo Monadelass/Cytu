@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         new Cinemamode
 // @namespace    vvv.sylph
-// @version      1.1.3
+// @version      1.1.4
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/cytube/userscript/newCinemamode.user.js
 // @match        https://cytu.be/r/wieherbuhq
 // @match        https://cytu.be/r/krautsynch
 // @match        https://cytu.be/r/bener
+// @match        https://cytu.be/r/sportsynch
 // @grant        none
 // @run-at       document-end
 // ==/UserScript==
@@ -167,8 +168,11 @@ class Cinemamode {
 		`<li><a href='javascript:void(0)' onclick='javascript:$("#cinematoggle").click()'>Cinema Mode</a></li>`
 		);
 
+
 		//add toggle Cinemamode Button to top right corner of window ******************************
 		$('<div id="cinematoggle"><span class="glyphicon glyphicon-new-window "></span></div>').insertAfter("#nav-collapsible .navbar-nav").click(Cinemamode.toggleCinemamode);
+        $("#videowrap").append('<div id="cinematoggle2"><span class="glyphicon glyphicon-new-window "></span></div>').click(Cinemamode.toggleCinemamode);
+
 
 		//resize slider bar
 		Cinemamode.addResizeSlider();
@@ -193,15 +197,26 @@ class Cinemamode {
 	}
 
 	static toggleCinemamode(){
+
 		//when entering cinemamode
 		if (!$("body").hasClass("cinemachat")) {
+            document.querySelector('#motdrow').style.display = 'none'; // MOTD ausblenden
 			//hide userlist on entering cinemamode
 			if ($("#userlist").is(":visible")) {
 				$("#userlisttoggle").click();
 			}
 
 			$("html, body").animate({ scrollTop: 0 }, "slow");
-		}
+            //auto fullscreen (F11)?
+            if (window.whqBtfyELSInstance.isAutof11On){
+                document.documentElement.requestFullscreen();
+                console.log('make it fullscreen');
+            }
+		} else { //when exiting cinemamode
+            document.querySelector('#motdrow').style.display = ''; // MOTD anzeigen
+            document.exitFullscreen();
+        }
+
 		$("body").toggleClass("cinemachat");
 		if ($("iframe[src*=livestream]").length) {
 			PLAYER.mediaType = "";
@@ -412,12 +427,40 @@ body.cinemachat.cinema-nopoll #pollwrap {
 #cinematoggle {
     right: 2px;
     top: 0 !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     padding: 1px 5px !important;
     border: 2px solid rgba(255,255,255,0.5) !important;
     cursor:pointer;
-	float:right;
+    float:right;
+    width: 30px;
+    height: 30px
 }
+
+#cinematoggle2 {
+    display: none;
+}
+.cinemachat #cinematoggle2 {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    right: 2px;
+    top: 0 !important;
+    font-size: 18px !important;
+    padding: 1px 5px !important;
+    border: 2px solid rgba(255,255,255,0.5) !important;
+    cursor:pointer;
+    width: 30px;
+    height: 30px;
+    opacity: 0.0;
+    transition-delay: 2.0s;
+    transition-duration: 1.5s;
+	background-image: linear-gradient(#3c3c3c, #323232 60%, #242528) !important;
+}
+.cinemachat #cinematoggle2:hover {
+    opacity: 1.0;
+    transition: 0.5s;
+}
+
 
 
 /************************************************************/
@@ -618,6 +661,13 @@ body.cinemchat #chatline{
 .cinemachat .modal-dialog{
 	margin-top: 10px;
 }
+
+/************************************/
+/*	 		Misc         		 	*/
+/************************************/
+.cinemachat .cinemahide{
+    display: none !important;
+}
 		`;
 	}
 }
@@ -663,6 +713,8 @@ class WHQbtfyELS{
 		this.isShowEmoteCaptionOn = true;
 		this.isAutohideOn = true;
 		this.isOverridetabOn = true;
+        this.isHidetitlebarOn = false;
+        this.isAutof11On = false;
 
 		this._allEmotes = [];
         this.getAllEmotes();
@@ -906,16 +958,20 @@ class WHQbtfyELS{
 
 	setupConfigboxOptions(){
 		//pre checked checkboxes
-		const [a,b,c,d,e] = [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn
+		const [a,b,c,d,e,f,g] = [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn, this.isHidetitlebarOn, this.isAutof11On
 			].map((x) => {if (x){return "checked";} else {return "";} });
 
 		$("#config-cog-box1").append(`<div id="config-els-cat">
 			<div id="config-els-options">
-				<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize ELS emotes</label><small> (normal order)</small></div>
-				<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch ELS emotes</label><small> (search start of string)</small></div>
-				<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show ELS caption</label><small> (just picture)</small></div>
+				<h4>Emote Search (ELS)</h4>
+				<div><input type="checkbox" id="els-option-randomize" name="randomize ELS emotes" ${a}><label for="els-option-randomize">randomize emotes</label><small> (normal order)</small></div>
+				<div><input type="checkbox" id="els-option-fullsearch" name="fullsearch ELS emotes" ${b}><label for="els-option-fullsearch">fullsearch emotes</label><small> (search start of string)</small></div>
+				<div><input type="checkbox" id="els-option-emotecaption" name="show ELS caption" ${c}><label for="els-option-emotecaption">show emote caption</label><small> (just picture)</small></div>
 				<div><input type="checkbox" id="els-option-autohide" name="autohide ELS"${d}><label for="els-option-autohide">autohide ELS</label><small> (stay open offclick)</small></div>
 				<div><input type="checkbox" id="els-option-overridetab" name="override [Tab]" ${e}><label for="els-option-overridetab">override [Tab]</label><small> (ctrl+b)</small></div>
+				<h4>Cinema Mode</h4>
+                <div><input type="checkbox" id="cm-option-hidetitlebar" name="hide tittlebar" ${f}><label for="cm-option-hidetitlebar">hide titlebar</label></div>
+                <div><input type="checkbox" id="cm-option-autof11" name="auto fullscreen" ${g}><label for="cm-option-autof11">auto fullscreen</label><small> (F11)</small></div>
 				<button id="whq-config-els-save" class="whq-config-savebtn">Save to Cookie</button>
 			</div>
 		</div>`);
@@ -959,6 +1015,26 @@ class WHQbtfyELS{
 				$("#chatline").on("keydown", window.defaultChatlineKeydownEvent);
 			}
 		});
+
+        //cinemamode
+        $("#cm-option-hidetitlebar").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().setON_Hidetitlebar();
+			} else {
+				//WHQbtfyELS.getInstance().isHidetitlebarOn = false;
+                //reset titlebar
+                WHQbtfyELS.getInstance().setOff_Hidetitlebar();
+			}
+		});
+        $("#cm-option-autof11").on("click", function(e){
+			if (e.target.checked){
+				WHQbtfyELS.getInstance().setON_Autof11();
+			} else {
+				WHQbtfyELS.getInstance().isAutof11On = false;
+			}
+		});
+
+        //save
 		$("#whq-config-els-save").on("click", function(e){
 			WHQbtfyELS.getInstance().setConfig();
 		});
@@ -990,9 +1066,20 @@ class WHQbtfyELS{
 			}
 		});
 	}
+    setON_Hidetitlebar(){
+		this.isHidetitlebarOn = true;
+        $('.navbar').addClass('cinemahide');
+	}
+    setOff_Hidetitlebar(){
+		this.isHidetitlebarOn = false;
+        $('.navbar').removeClass('cinemahide');
+	}
+    setON_Autof11(){
+		this.isAutof11On = true;
+	}
 
 	setConfig(){
-		let optionarr = [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn];
+		let optionarr = [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn, this.isHidetitlebarOn, this.isAutof11On];
 		let optionint = WHQbtfyELS.bitarrToInt(optionarr);
 		document.cookie = `whqconfigels=${optionint}`;
 	}
@@ -1000,8 +1087,8 @@ class WHQbtfyELS{
 	retrieveConfig(){
 		let optionint = document.cookie.replace(/(?:(?:^|.*;\s*)whqconfigels\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 		if(optionint){
-			let optionarr = WHQbtfyELS.intToBitarr(optionint, 5);
-            [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn] = optionarr;
+			let optionarr = WHQbtfyELS.intToBitarr(optionint, 7);
+            [this.isRandomizeemotesOn, this.isFullsearchOn, this.isShowEmoteCaptionOn, this.isAutohideOn, this.isOverridetabOn, this.isHidetitlebarOn, this.isAutof11On] = optionarr;
 		}
 
 
@@ -1019,6 +1106,12 @@ class WHQbtfyELS{
 		}
 		if (this.isOverridetabOn){
 			this.setON_Overridetab();
+		}
+        if (this.isHidetitlebarOn){
+			this.setON_Hidetitlebar();
+		}
+        if (this.setON_isAutof11){
+			this.setON_Autof11();
 		}
 	}
 
