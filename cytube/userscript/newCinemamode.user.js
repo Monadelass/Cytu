@@ -243,7 +243,6 @@ class Cinemamode {
 		if ($("iframe[src*=livestream]").length) {
 			PLAYER.mediaType = "";
 			PLAYER.mediaId = "";
-            console.log('is ready?');
             socket.emit("playerReady"); //probably doesn't works in userscript anyway
 		}
 		handleWindowResize();
@@ -617,27 +616,28 @@ body.cinemachat.cinema-nopoll #pollwrap {
 .cinemachat #chat-resizeslider{
     order: 20;
     cursor: col-resize;
-    background: #272727 no-repeat center center;
-    top: 50%;
+    height: calc(100% - 38px);
+    opacity: 0; /* transparenter, langer Schieberegler */
     position: absolute;
     z-index: 3250;
-
-    border: dimgrey 1px solid;
+    /* border: dimgrey 1px solid; */
 }
-.cinemachat.chat-right #chat-resizeslider{
-	right: var(--cinema-chatvid-width, 400px) !important;
-    margin-right: -5px;
-}
-.cinemachat.chat-left #chat-resizeslider{
-	left: var(--cinema-chatvid-width, 400px) !important;
-    margin-left: -10px;
-    font-size: 10px;
-    height: 24px;
+.cinemachat #chat-resizeslider:hover{
+    opacity: 1;
+    color: #f4e0e029;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    transition-delay: 150ms;
 }
-
+.cinemachat.chat-left #chat-resizeslider{
+	left: var(--cinema-chatvid-width, 400px) !important;
+    background: linear-gradient(to right, #703d34 0%, #ff00fb00 100%) no-repeat center center;
+}
+.cinemachat.chat-right #chat-resizeslider{
+	right: var(--cinema-chatvid-width, 400px) !important;
+    background: linear-gradient(to left, #703d34 0%, #ff00fb00 100%) no-repeat center center;
+}
 
 body.cinemachat.hidescrollbar{
 	overflow: hidden;
