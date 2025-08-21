@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         new Cinemamode
 // @namespace    vvv.sylph
-// @version      1.1.5
+// @version      1.1.6
 // @description  none
 // @author       nobody
 // @updateURL    https://github.com/Monadelass/WHQ/raw/master/cytube/userscript/newCinemamode.user.js
@@ -10,6 +10,7 @@
 // @match        https://cytu.be/r/bener
 // @match        https://cytu.be/r/sportsynch
 // @grant        none
+// @grant        window.socket
 // @run-at       document-end
 // ==/UserScript==
 
@@ -95,6 +96,19 @@ let miscCSS = `
 .chatheaderbtn-active{
 	color: #d25a5a;
 }
+
+/************************************/
+/*	 Fix Poll Style      			*/
+/************************************/
+#pollwrap .close{
+    margin-left: 12px;
+    line-height: 0.5;
+    font-size: 30px;
+}
+.dismissed .dismiss.btn {
+    display: none;
+}
+
 `;
 
 this.style = $("<style>").attr("type", "text/css").attr("id", "cinemaStyle").html(miscCSS).appendTo("head");
@@ -132,7 +146,7 @@ class Cinemamode {
 
 		Cinemamode.addHideScrollbarWhileHoveringEle($("#chatwrap"), 1200);
 
-
+        Cinemamode.improveCinemaPoll();
 
 		CLIENT.cinemaMode = this;
 	}
@@ -229,7 +243,8 @@ class Cinemamode {
 		if ($("iframe[src*=livestream]").length) {
 			PLAYER.mediaType = "";
 			PLAYER.mediaId = "";
-			socket.emit("playerReady");
+            console.log('is ready?');
+            socket.emit("playerReady"); //probably doesn't works in userscript anyway
 		}
 		handleWindowResize();
 	}
@@ -260,6 +275,21 @@ class Cinemamode {
 			ele.data('timeoutId', timeoutId);
 		});
 	}
+
+    static improveCinemaPoll(){
+        function insertDismissBtnToCurrentPoll(){
+            $(`<button class="dismiss cinemashow pull-right btn-warning btn btn-sm">Dismiss</button>`).insertAfter("#pollwrap .well.active .close");
+            $('#pollwrap .well.active .dismiss.btn').on('click', (e) => {e.target.parentNode.classList.add('dismissed');});
+        }
+
+
+        //register when a poll is started to add a dismiss button
+        socket.on('newPoll', () => {setTimeout(insertDismissBtnToCurrentPoll, 300);}); //requires Socket.io
+        //add dismiss button to current poll if there is one
+        if ($('#pollwrap .well.active').length > 0){
+            insertDismissBtnToCurrentPoll();
+        }
+    }
 
 	static addResizeSlider(){
 
@@ -305,15 +335,15 @@ class Cinemamode {
 
         wrapper2.addEventListener("dragover", (e) => {
             e.preventDefault();
-            console.log(`$(e.pageX)`);
+            //console.log(`$(e.pageX)`);
             let mouseX = e.pageX - wrapper2.offsetLeft;
             let mouseY = e.pageY - wrapper2.offsetTop;
-            console.log(`mouseX = ${mouseX} ; mouseY = ${mouseY}`);
+            //console.log(`mouseX = ${mouseX} ; mouseY = ${mouseY}`);
 
-            console.log("target= ", e.target);
+            //console.log("target= ", e.target);
             let minX = ~~(wrapper2.clientWidth * 0.1); //10% width
             let maxX = ~~(wrapper2.clientWidth * 0.9); //90% width
-            console.log(`minX = ${minX} ; maxX = ${maxX}`);
+            //console.log(`minX = ${minX} ; maxX = ${maxX}`);
 
             let newmouseX = mouseX;
             if (mouseX < minX) {
@@ -321,7 +351,7 @@ class Cinemamode {
             } else if (mouseX > maxX) {
                 newmouseX = maxX;
             }
-            console.log(`newmouseX = ${newmouseX}`);
+            //console.log(`newmouseX = ${newmouseX}`);
             rslidertop.style.left = newmouseX + "px";
             rsliderbottom.style.left = newmouseX + "px";
 
@@ -697,6 +727,7 @@ body.cinemchat #chatline{
 .no-pointer-event{ pointer-events: none; }
 		`;
 	}
+
 }
 
 new Cinemamode();
